@@ -449,7 +449,7 @@ function renderTable(data){
   if(!data.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty">Sheet trống<p>Hãy thêm dữ liệu vào Google Sheet</p></div></td></tr>`;return}
   tb.innerHTML=data.map(r=>{
     const pct=getPct(r.steps);
-    const pCls=pct===100?'':'pct>=50?'p-mid':'p-low'';
+    const pCls=pct>=100?'':pct>=50?'p-mid':'p-low';
     return`<tr>
       <td class="tid">${r.id}</td>
       <td>${r.name}${r.note?`<span style="font-size:11px;color:var(--hint);margin-left:6px">${r.note}</span>`:''}</td>
