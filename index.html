@@ -4,191 +4,346 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quản lý Sản xuất Sofa</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f5f4f0;--surface:#fff;--border:#e2e0d8;
-  --text:#1a1a18;--muted:#6b6960;--hint:#a09d94;
-  --green-bg:#eaf3de;--green:#3b6d11;--green-bd:#c0dd97;
-  --blue-bg:#e6f1fb;--blue:#185fa5;--blue-bd:#b5d4f4;
-  --amber-bg:#faeeda;--amber:#854f0b;--amber-bd:#fac775;
-  --red-bg:#fcebeb;--red:#a32d2d;--red-bd:#f7c1c1;
-  --gray-bg:#f1efe8;--gray:#5f5e5a;--gray-bd:#d3d1c7;
-  --r:10px;--rs:6px;
+  --bg:#f0ede8;--surface:#faf9f7;--surface2:#fff;--border:#e0dbd3;--border2:#d0cabf;
+  --text:#1c1a17;--muted:#7a7469;--hint:#b0a99e;
+  --green-bg:#e8f5e2;--green:#2d6a1f;--green-bd:#b8dba8;
+  --blue-bg:#e3eff9;--blue:#1a5694;--blue-bd:#a8cef0;
+  --amber-bg:#fdf0d8;--amber:#7a4d08;--amber-bd:#f5c97a;
+  --red-bg:#fce8e8;--red:#8b1f1f;--red-bd:#f0a8a8;
+  --gray-bg:#eeebe6;--gray:#6b6560;--gray-bd:#cec8c0;
+  --r:12px;--rs:8px;
 }
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
-.wrap{max-width:1100px;margin:0 auto;padding:28px 20px}
-.ph{margin-bottom:24px}
-.ph h1{font-size:22px;font-weight:600;letter-spacing:-.3px}
-.ph p{font-size:13px;color:var(--muted);margin-top:4px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;margin-bottom:20px}
-.card-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
-.field{margin-bottom:12px}
-.field label{display:block;font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px}
-.field input,.field textarea{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;font-size:13px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s;font-family:inherit}
-.field input:focus,.field textarea:focus{border-color:#888;background:#fff}
-.field input::placeholder,.field textarea::placeholder{color:var(--hint)}
-.field textarea{resize:vertical;min-height:80px;font-family:monospace;font-size:12px}
-.btn-row{display:flex;gap:8px;flex-wrap:wrap}
-.btn{border:none;border-radius:var(--rs);padding:10px 18px;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s;white-space:nowrap}
-.btn:active{transform:scale(.97)}
-.btn-dark{background:var(--text);color:#fff}
-.btn-dark:hover{opacity:.82}
-.btn-ghost{background:var(--gray-bg);color:var(--gray);border:1px solid var(--gray-bd)}
-.btn-ghost:hover{background:var(--border)}
-.ht{font-size:12px;color:var(--hint);margin-top:8px}
-.alert{border-radius:var(--rs);padding:10px 14px;font-size:13px;margin-top:12px;border-left:3px solid;display:none;line-height:1.6}
-.err{background:var(--red-bg);color:var(--red);border-color:#e24b4a}
-.ok{background:var(--green-bg);color:var(--green);border-color:#639922}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
-.sl{font-size:12px;color:var(--muted);margin-bottom:8px}
-.sv{font-size:26px;font-weight:600}
-.ss{font-size:11px;color:var(--hint);margin-top:4px}
-.tb{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
-.sync-st{font-size:12px;color:var(--hint);display:flex;align-items:center;gap:6px}
-.dot{width:7px;height:7px;border-radius:50%;background:#639922;display:inline-block}
-.spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .6s linear infinite;display:none}
-@keyframes spin{to{transform:rotate(360deg)}}
-.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+
+/* ── Layout ── */
+.wrap{max-width:1200px;margin:0 auto;padding:32px 24px}
+
+/* ── Header ── */
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;gap:16px;flex-wrap:wrap}
+.header-left h1{font-size:24px;font-weight:600;letter-spacing:-.4px;color:var(--text)}
+.header-left p{font-size:13px;color:var(--muted);margin-top:3px}
+.header-right{display:flex;gap:8px;align-items:center}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:4px;margin-bottom:28px;width:fit-content}
+.tab{padding:8px 20px;border-radius:var(--rs);font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .15s}
+.tab.active{background:var(--text);color:#fff}
+.tab:hover:not(.active){background:var(--bg);color:var(--text)}
+
+/* ── Panels ── */
+.panel{display:none}
+.panel.active{display:block}
+
+/* ── Cards stat ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px}
+.stat.s-total::before{background:var(--text)}
+.stat.s-done::before{background:var(--green)}
+.stat.s-doing::before{background:var(--blue)}
+.stat.s-warn::before{background:var(--red)}
+.stat .sl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px}
+.stat .sv{font-size:32px;font-weight:600;line-height:1;font-family:'DM Mono',monospace}
+.stat .ss{font-size:12px;color:var(--hint);margin-top:5px}
+
+/* ── Section title ── */
+.sec-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.sec-title span{background:var(--border);height:1px;flex:1;display:block}
+
+/* ── Bước sản xuất progress ── */
+.steps-overview{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.step-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
+.step-card .step-name{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px}
+.step-card .step-num{font-size:28px;font-weight:600;font-family:'DM Mono',monospace;margin-bottom:8px}
+.step-card .step-bar-bg{height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.step-card .step-bar-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.step-card .step-sub{font-size:11px;color:var(--hint);margin-top:6px}
+
+/* ── Cảnh báo ── */
+.warn-list{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.warn-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:14px}
+.warn-item.late{border-left:3px solid var(--red);background:var(--red-bg)}
+.warn-item.soon{border-left:3px solid var(--amber);background:var(--amber-bg)}
+.warn-icon{font-size:18px;flex-shrink:0}
+.warn-body{flex:1}
+.warn-id{font-size:12px;font-weight:600;color:var(--muted);font-family:'DM Mono',monospace}
+.warn-name{font-size:14px;font-weight:500;color:var(--text);margin:2px 0}
+.warn-detail{font-size:12px;color:var(--muted)}
+.warn-badge{font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;white-space:nowrap}
+.wb-late{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.wb-soon{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+.no-warn{background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--r);padding:20px;text-align:center;color:var(--green);font-size:13px;font-weight:500}
+
+/* ── Bảng ── */
+.tw{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:28px}
 table{width:100%;border-collapse:collapse}
-thead th{padding:11px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border);text-align:center}
+thead th{padding:11px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border);text-align:center;white-space:nowrap}
 thead th:first-child,thead th:nth-child(2){text-align:left}
 tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--bg)}
-td{padding:12px 14px;font-size:13px;vertical-align:middle;text-align:center}
+td{padding:13px 16px;font-size:13px;vertical-align:middle;text-align:center}
 td:first-child,td:nth-child(2){text-align:left}
-.tid{font-weight:600}
-.chip{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;font-size:12px;font-weight:600;margin:0 auto}
+.tid{font-weight:600;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}
+
+/* ── Step dots bảng ── */
+.chip{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:11px;font-weight:700;margin:0 auto}
 .s0{background:var(--gray-bg);color:var(--hint);border:1px solid var(--gray-bd)}
 .s1{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
 .s2{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
-.badge{display:inline-block;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+
+/* ── Progress bar bảng ── */
+.prog-wrap{display:flex;align-items:center;gap:8px;min-width:100px}
+.prog-bg{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:var(--green);transition:width .4s}
+.prog-fill.p-mid{background:var(--blue)}
+.prog-fill.p-low{background:var(--gray-bd)}
+.prog-pct{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;min-width:28px;text-align:right}
+
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;white-space:nowrap}
 .b-done{background:var(--green-bg);color:var(--green)}
 .b-doing{background:var(--blue-bg);color:var(--blue)}
 .b-todo{background:var(--gray-bg);color:var(--gray)}
-.dl{font-size:12px}
+
+.dl{font-size:12px;font-family:'DM Mono',monospace}
 .dl-ok{color:var(--muted)}
-.dl-warn{color:var(--amber);font-weight:500}
+.dl-warn{color:var(--amber);font-weight:600}
 .dl-late{color:var(--red);font-weight:600}
+
+/* ── Config panel ── */
+.cfg-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;margin-bottom:20px}
+.cfg-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px}
+.field input,.field textarea{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;font-size:13px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s;font-family:inherit}
+.field input:focus,.field textarea:focus{border-color:var(--border2);background:var(--surface2)}
+.field textarea{resize:vertical;min-height:90px;font-family:'DM Mono',monospace;font-size:12px}
+
+/* ── Buttons ── */
+.btn{border:none;border-radius:var(--rs);padding:10px 20px;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit}
+.btn:active{transform:scale(.97)}
+.btn-dark{background:var(--text);color:#fff}
+.btn-dark:hover{opacity:.85}
+.btn-ghost{background:var(--gray-bg);color:var(--gray);border:1px solid var(--gray-bd)}
+.btn-ghost:hover{background:var(--border)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+.ht{font-size:12px;color:var(--hint);margin-top:8px;line-height:1.5}
+.alert{border-radius:var(--rs);padding:10px 14px;font-size:13px;margin-top:12px;border-left:3px solid;display:none;line-height:1.6}
+.alert-err{background:var(--red-bg);color:var(--red);border-color:#d04040}
+.alert-ok{background:var(--green-bg);color:var(--green);border-color:#4a9e30}
+
+/* ── Sync bar ── */
+.syncbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.sync-st{font-size:12px;color:var(--hint);display:flex;align-items:center;gap:6px}
+.dot-live{width:7px;height:7px;border-radius:50%;background:#4a9e30;display:inline-block}
+.spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .6s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 .empty{padding:48px;text-align:center;color:var(--muted)}
 .empty p{margin-top:6px;font-size:12px;color:var(--hint)}
-@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.col-hide{display:none}}
+
+@media(max-width:800px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .steps-overview{grid-template-columns:repeat(2,1fr)}
+  .col-hide{display:none}
+}
+@media(max-width:500px){
+  .stats{grid-template-columns:1fr 1fr}
+  .steps-overview{grid-template-columns:1fr 1fr}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="ph">
-    <h1>🛋️ Quản lý Sản xuất Sofa</h1>
-    <p>Đồng bộ dữ liệu từ Google Sheet · Service Account</p>
-  </div>
 
-  <div class="card">
-    <div class="card-title">Cấu hình kết nối</div>
-    <div class="field">
-      <label>Sheet ID</label>
-      <input type="text" id="sheetId" placeholder="Lấy từ URL: docs.google.com/spreadsheets/d/SHEET_ID/edit"/>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>🛋 Sản xuất Sofa</h1>
+      <p>Hệ thống quản lý tiến độ sản xuất</p>
     </div>
-    <div class="field">
-      <label>Tên Sheet <span style="color:var(--hint);font-weight:400">(mặc định Sheet1)</span></label>
-      <input type="text" id="sheetName" value="Sheet1"/>
-    </div>
-    <div class="field">
-      <label>Service Account JSON <span style="color:var(--hint);font-weight:400">(dán toàn bộ nội dung file JSON vào đây)</span></label>
-      <textarea id="saJson" placeholder='{"type":"service_account","project_id":"...","private_key":"...","client_email":"...",...}'></textarea>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-dark" onclick="connect()">Kết nối & Đồng bộ</button>
-      <button class="btn btn-ghost" onclick="loadDemo()">Xem dữ liệu mẫu</button>
-      <button class="btn btn-ghost" onclick="saveConfig()">💾 Lưu cấu hình</button>
-    </div>
-    <div class="ht">
-      Sheet phải được share cho email: <b>sofa-dashboard@macro-nuance-493508-h9.iam.gserviceaccount.com</b>
-    </div>
-    <div class="alert err" id="alertErr"></div>
-    <div class="alert ok"  id="alertOk"></div>
-  </div>
-
-  <div class="stats">
-    <div class="stat"><div class="sl">Tổng đơn hàng</div><div class="sv" id="stTotal">—</div><div class="ss">đang theo dõi</div></div>
-    <div class="stat"><div class="sl">Hoàn thành</div><div class="sv" id="stDone" style="color:var(--green)">—</div><div class="ss">đơn hàng</div></div>
-    <div class="stat"><div class="sl">Đang sản xuất</div><div class="sv" id="stDoing" style="color:var(--blue)">—</div><div class="ss">đơn hàng</div></div>
-    <div class="stat"><div class="sl">Chưa bắt đầu</div><div class="sv" id="stTodo" style="color:var(--gray)">—</div><div class="ss">đơn hàng</div></div>
-  </div>
-
-  <div class="tb">
-    <div class="sync-st">
+    <div class="header-right">
       <div class="spinner" id="spinner"></div>
-      <span id="syncLabel">Chưa đồng bộ</span>
+      <button class="btn btn-ghost" onclick="refresh()">↻ Làm mới</button>
+      <button class="btn btn-ghost" onclick="switchTab('config')">⚙ Cài đặt</button>
     </div>
-    <button class="btn btn-ghost" onclick="refresh()">↻ Làm mới</button>
   </div>
 
-  <div class="tw">
-    <table>
-      <thead>
-        <tr>
-          <th style="width:90px;text-align:left">Mã đơn</th>
-          <th style="text-align:left">Tên sản phẩm</th>
-          <th>Lên form dáng</th>
-          <th>Cắt gỗ</th>
-          <th class="col-hide">Thi công</th>
-          <th class="col-hide">Nhồi nệm</th>
-          <th class="col-hide">Deadline</th>
-          <th>Trạng thái</th>
-          <th class="col-hide">Ghi chú</th>
-        </tr>
-      </thead>
-      <tbody id="tbody">
-        <tr><td colspan="9"><div class="empty">Chưa có dữ liệu<p>Dán Service Account JSON và nhấn Kết nối</p></div></td></tr>
-      </tbody>
-    </table>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('dashboard')" id="tab-dashboard">Dashboard</button>
+    <button class="tab" onclick="switchTab('orders')" id="tab-orders">Đơn hàng</button>
+    <button class="tab" onclick="switchTab('config')" id="tab-config">Cài đặt</button>
   </div>
+
+  <!-- ── PANEL: DASHBOARD ── -->
+  <div class="panel active" id="panel-dashboard">
+
+    <!-- Sync bar -->
+    <div class="syncbar">
+      <span class="sync-st" id="syncLabel"><span style="color:var(--hint)">Chưa đồng bộ</span></span>
+      <span id="warnCount"></span>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat s-total">
+        <div class="sl">Tổng đơn</div>
+        <div class="sv" id="stTotal">—</div>
+        <div class="ss">đang sản xuất</div>
+      </div>
+      <div class="stat s-done">
+        <div class="sl">Hoàn thành</div>
+        <div class="sv" id="stDone" style="color:var(--green)">—</div>
+        <div class="ss">đơn hàng</div>
+      </div>
+      <div class="stat s-doing">
+        <div class="sl">Đang làm</div>
+        <div class="sv" id="stDoing" style="color:var(--blue)">—</div>
+        <div class="ss">đơn hàng</div>
+      </div>
+      <div class="stat s-warn">
+        <div class="sl">Trễ / Sắp trễ</div>
+        <div class="sv" id="stWarn" style="color:var(--red)">—</div>
+        <div class="ss">cần xử lý</div>
+      </div>
+    </div>
+
+    <!-- Tiến độ từng bước -->
+    <div class="sec-title">Tiến độ từng bước sản xuất <span></span></div>
+    <div class="steps-overview" id="stepsOverview">
+      <div class="step-card"><div class="step-name">Lên form dáng</div><div class="step-num">—</div><div class="step-bar-bg"><div class="step-bar-fill" style="width:0%;background:var(--blue)"></div></div><div class="step-sub">chờ dữ liệu</div></div>
+      <div class="step-card"><div class="step-name">Cắt gỗ</div><div class="step-num">—</div><div class="step-bar-bg"><div class="step-bar-fill" style="width:0%;background:var(--green)"></div></div><div class="step-sub">chờ dữ liệu</div></div>
+      <div class="step-card"><div class="step-name">Thi công</div><div class="step-num">—</div><div class="step-bar-bg"><div class="step-bar-fill" style="width:0%;background:var(--amber)"></div></div><div class="step-sub">chờ dữ liệu</div></div>
+      <div class="step-card"><div class="step-name">Nhồi nệm</div><div class="step-num">—</div><div class="step-bar-bg"><div class="step-bar-fill" style="width:0%;background:var(--red)"></div></div><div class="step-sub">chờ dữ liệu</div></div>
+    </div>
+
+    <!-- Cảnh báo deadline -->
+    <div class="sec-title">Cảnh báo deadline <span></span></div>
+    <div class="warn-list" id="warnList">
+      <div class="empty">Chưa có dữ liệu<p>Kết nối Google Sheet để xem cảnh báo</p></div>
+    </div>
+
+  </div>
+
+  <!-- ── PANEL: ĐƠN HÀNG ── -->
+  <div class="panel" id="panel-orders">
+    <div class="syncbar">
+      <span class="sync-st" id="syncLabel2"><span style="color:var(--hint)">Chưa đồng bộ</span></span>
+    </div>
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left;width:95px">Mã đơn</th>
+            <th style="text-align:left">Tên sản phẩm</th>
+            <th>Lên form</th>
+            <th>Cắt gỗ</th>
+            <th class="col-hide">Thi công</th>
+            <th class="col-hide">Nhồi nệm</th>
+            <th class="col-hide">Tiến độ</th>
+            <th class="col-hide">Deadline</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="9"><div class="empty">Chưa có dữ liệu<p>Vào tab Cài đặt để kết nối Google Sheet</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── PANEL: CÀI ĐẶT ── -->
+  <div class="panel" id="panel-config">
+    <div class="cfg-card">
+      <div class="cfg-title">Kết nối Google Sheet</div>
+      <div class="field">
+        <label>Sheet ID</label>
+        <input type="text" id="sheetId" placeholder="Lấy từ URL: docs.google.com/spreadsheets/d/SHEET_ID/edit"/>
+      </div>
+      <div class="field">
+        <label>Tên Sheet <span style="color:var(--hint);font-weight:400">(mặc định Sheet1)</span></label>
+        <input type="text" id="sheetName" value="Sheet1"/>
+      </div>
+      <div class="field">
+        <label>Service Account JSON</label>
+        <textarea id="saJson" placeholder='{"type":"service_account","project_id":"...","private_key":"...","client_email":"...",...}'></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-dark" onclick="connect()">Kết nối & Đồng bộ</button>
+        <button class="btn btn-ghost" onclick="loadDemo()">Xem dữ liệu mẫu</button>
+        <button class="btn btn-ghost" onclick="saveConfig()">💾 Lưu cấu hình</button>
+      </div>
+      <div class="ht">Sheet phải được share quyền Viewer cho email service account của bạn.</div>
+      <div class="alert alert-err" id="alertErr"></div>
+      <div class="alert alert-ok"  id="alertOk"></div>
+    </div>
+
+    <div class="cfg-card">
+      <div class="cfg-title">Cấu trúc Google Sheet</div>
+      <div style="font-size:13px;color:var(--muted);line-height:2">
+        <b style="color:var(--text)">Hàng 1:</b> Tiêu đề (bỏ qua khi đọc)<br>
+        <b style="color:var(--text)">Cột A:</b> Mã đơn hàng (SF-001)<br>
+        <b style="color:var(--text)">Cột B:</b> Tên sản phẩm<br>
+        <b style="color:var(--text)">Cột C:</b> Lên form dáng &nbsp;<span class="badge b-todo">0</span> <span class="badge b-doing">1</span> <span class="badge b-done">2</span><br>
+        <b style="color:var(--text)">Cột D:</b> Cắt gỗ<br>
+        <b style="color:var(--text)">Cột E:</b> Thi công<br>
+        <b style="color:var(--text)">Cột F:</b> Nhồi nệm<br>
+        <b style="color:var(--text)">Cột G:</b> Deadline (dd/mm/yyyy)<br>
+        <b style="color:var(--text)">Cột H:</b> Ghi chú
+      </div>
+    </div>
+  </div>
+
 </div>
-
 <script>
-// ── Dữ liệu mẫu ──────────────────────────────────────────────
+// ── Demo data ────────────────────────────────────────────────
 const DEMO=[
   {id:'SF-001',name:'Sofa góc L da bò',      steps:[2,2,2,1],deadline:'20/04/2026',note:'Khách VIP'},
-  {id:'SF-002',name:'Sofa đơn vải nhung',    steps:[2,2,1,0],deadline:'18/04/2026',note:''},
+  {id:'SF-002',name:'Sofa đơn vải nhung',    steps:[2,2,1,0],deadline:'17/04/2026',note:''},
   {id:'SF-003',name:'Sofa băng 3 chỗ',       steps:[2,1,0,0],deadline:'25/04/2026',note:''},
-  {id:'SF-004',name:'Sofa giường gấp',       steps:[1,0,0,0],deadline:'30/04/2026',note:'Chờ gỗ'},
-  {id:'SF-005',name:'Sofa tình nhân oval',   steps:[2,2,2,2],deadline:'15/04/2026',note:''},
+  {id:'SF-004',name:'Sofa giường gấp',       steps:[1,0,0,0],deadline:'14/04/2026',note:'Chờ gỗ'},
+  {id:'SF-005',name:'Sofa tình nhân oval',   steps:[2,2,2,2],deadline:'10/04/2026',note:''},
   {id:'SF-006',name:'Sofa trẻ em mini',      steps:[0,0,0,0],deadline:'05/05/2026',note:''},
+  {id:'SF-007',name:'Sofa modular 5 mảnh',   steps:[2,2,2,1],deadline:'18/04/2026',note:'Giao gấp'},
 ];
 
-let _cfg=null;
+let _cfg=null, _data=[];
 
-// ── Load cấu hình đã lưu ──────────────────────────────────────
+// ── Init ─────────────────────────────────────────────────────
 window.onload=()=>{
   try{
-    const c=JSON.parse(localStorage.getItem('sofa_sa_cfg')||'{}');
-    if(c.sheetId)  document.getElementById('sheetId').value=c.sheetId;
-    if(c.sheetName)document.getElementById('sheetName').value=c.sheetName;
-    if(c.saJson)   document.getElementById('saJson').value=c.saJson;
+    const c=JSON.parse(localStorage.getItem('sofa_cfg_v4')||'{}');
+    if(c.sheetId)   document.getElementById('sheetId').value=c.sheetId;
+    if(c.sheetName) document.getElementById('sheetName').value=c.sheetName;
+    if(c.saJson)    document.getElementById('saJson').value=c.saJson;
   }catch(e){}
 };
 
-function saveConfig(){
-  localStorage.setItem('sofa_sa_cfg',JSON.stringify({
-    sheetId:   document.getElementById('sheetId').value.trim(),
-    sheetName: document.getElementById('sheetName').value.trim()||'Sheet1',
-    saJson:    document.getElementById('saJson').value.trim()
-  }));
-  showAlert('ok','✓ Đã lưu cấu hình. Lần sau mở lại không cần nhập lại.');
+// ── Tabs ─────────────────────────────────────────────────────
+function switchTab(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
 }
 
 // ── Helpers ───────────────────────────────────────────────────
 function setLoad(on){document.getElementById('spinner').style.display=on?'inline-block':'none'}
 function showAlert(t,m){
-  ['alertErr','alertOk'].forEach(id=>{ const e=document.getElementById(id); e.style.display='none'; e.innerHTML=''; });
+  ['alertErr','alertOk'].forEach(id=>{const e=document.getElementById(id);e.style.display='none';e.innerHTML='';});
   if(!m)return;
   const e=document.getElementById(t==='ok'?'alertOk':'alertErr');
-  e.innerHTML=m; e.style.display='block';
+  e.innerHTML=m;e.style.display='block';
 }
 function extractId(v){const m=v.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);return m?m[1]:v.trim()}
 function getStatus(s){if(s.filter(x=>x===2).length===4)return'done';if(s.some(x=>x>0))return'doing';return'todo'}
+function getPct(s){return Math.round(s.reduce((a,b)=>a+b,0)/8*100)}
 function chip(v){return`<div class="chip s${v}">${['–','▶','✓'][v]}</div>`}
 function badge(s){
   const st=getStatus(s),d=s.filter(x=>x===2).length;
@@ -196,74 +351,182 @@ function badge(s){
   if(st==='doing')return`<span class="badge b-doing">Bước ${d+1}/4</span>`;
   return`<span class="badge b-todo">Chờ bắt đầu</span>`;
 }
+function parseDl(dl){
+  if(!dl)return null;
+  const p=dl.split('/');if(p.length!==3)return null;
+  return new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
+}
+function dlDiff(dl){
+  const d=parseDl(dl);if(!d)return null;
+  const now=new Date();now.setHours(0,0,0,0);
+  return Math.ceil((d-now)/86400000);
+}
 function dlClass(dl,s){
   if(!dl||getStatus(s)==='done')return'dl-ok';
-  const p=dl.split('/');if(p.length!==3)return'dl-ok';
-  const d=new Date(p[2],p[1]-1,p[0]),now=new Date();now.setHours(0,0,0,0);
-  const diff=Math.ceil((d-now)/86400000);
+  const diff=dlDiff(dl);if(diff===null)return'dl-ok';
   return diff<0?'dl-late':diff<=3?'dl-warn':'dl-ok';
 }
 
-// ── Render bảng ───────────────────────────────────────────────
-function render(data){
+// ── Render Dashboard ──────────────────────────────────────────
+function renderDashboard(data){
+  const total=data.length;
+  const done =data.filter(r=>getStatus(r.steps)==='done').length;
+  const doing=data.filter(r=>getStatus(r.steps)==='doing').length;
+  const todo =data.filter(r=>getStatus(r.steps)==='todo').length;
+
+  // Stats
+  document.getElementById('stTotal').textContent=total;
+  document.getElementById('stDone').textContent=done;
+  document.getElementById('stDoing').textContent=doing;
+
+  // Cảnh báo deadline
+  const warns=data.filter(r=>{
+    if(getStatus(r.steps)==='done')return false;
+    const diff=dlDiff(r.deadline);
+    return diff!==null&&diff<=3;
+  }).sort((a,b)=>dlDiff(a.deadline)-dlDiff(b.deadline));
+
+  document.getElementById('stWarn').textContent=warns.length;
+
+  // Tiến độ từng bước
+  const STEP_NAMES=['Lên form dáng','Cắt gỗ','Thi công','Nhồi nệm'];
+  const STEP_COLORS=['var(--blue)','var(--green)','var(--amber)','var(--red)'];
+  const overview=document.getElementById('stepsOverview');
+  if(total>0){
+    overview.innerHTML=STEP_NAMES.map((name,i)=>{
+      const doneCount=data.filter(r=>r.steps[i]===2).length;
+      const doingCount=data.filter(r=>r.steps[i]===1).length;
+      const pct=Math.round(doneCount/total*100);
+      return`<div class="step-card">
+        <div class="step-name">${name}</div>
+        <div class="step-num" style="color:${STEP_COLORS[i]}">${doneCount}<span style="font-size:16px;color:var(--hint)">/${total}</span></div>
+        <div class="step-bar-bg"><div class="step-bar-fill" style="width:${pct}%;background:${STEP_COLORS[i]}"></div></div>
+        <div class="step-sub">${pct}% hoàn thành · ${doingCount} đang làm</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Render warnings
+  const warnList=document.getElementById('warnList');
+  if(warns.length===0){
+    warnList.innerHTML=`<div class="no-warn">✓ Tất cả đơn hàng đang đúng tiến độ</div>`;
+  } else {
+    warnList.innerHTML=warns.map(r=>{
+      const diff=dlDiff(r.deadline);
+      const isLate=diff<0;
+      const cls=isLate?'late':'soon';
+      const wbCls=isLate?'wb-late':'wb-soon';
+      const icon=isLate?'🔴':'🟡';
+      const msg=isLate?`Trễ ${Math.abs(diff)} ngày`:`Còn ${diff} ngày`;
+      const step=r.steps.filter(s=>s===2).length;
+      return`<div class="warn-item ${cls}">
+        <div class="warn-icon">${icon}</div>
+        <div class="warn-body">
+          <div class="warn-id">${r.id}</div>
+          <div class="warn-name">${r.name}</div>
+          <div class="warn-detail">Đang ở bước ${step+1}/4 · Deadline: ${r.deadline}${r.note?` · ${r.note}`:''}</div>
+        </div>
+        <span class="warn-badge ${wbCls}">${msg}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Sync label
+  const now=new Date();
+  const t=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  const lbl=`<span class="dot-live"></span> Đồng bộ lúc ${t} · ${total} đơn hàng`;
+  document.getElementById('syncLabel').innerHTML=lbl;
+  document.getElementById('syncLabel2').innerHTML=lbl;
+
+  // Warn count badge
+  document.getElementById('warnCount').innerHTML=warns.length>0
+    ?`<span class="badge" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)">⚠ ${warns.length} đơn cần xử lý</span>`:'';
+}
+
+// ── Render bảng đơn hàng ──────────────────────────────────────
+function renderTable(data){
   const tb=document.getElementById('tbody');
   if(!data.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty">Sheet trống<p>Hãy thêm dữ liệu vào Google Sheet</p></div></td></tr>`;return}
-  tb.innerHTML=data.map(r=>`
-    <tr>
+  tb.innerHTML=data.map(r=>{
+    const pct=getPct(r.steps);
+    const pCls=pct===100?'':'pct>=50?'p-mid':'p-low'';
+    return`<tr>
       <td class="tid">${r.id}</td>
-      <td>${r.name}</td>
+      <td>${r.name}${r.note?`<span style="font-size:11px;color:var(--hint);margin-left:6px">${r.note}</span>`:''}</td>
       <td>${chip(r.steps[0])}</td>
       <td>${chip(r.steps[1])}</td>
       <td class="col-hide">${chip(r.steps[2])}</td>
       <td class="col-hide">${chip(r.steps[3])}</td>
+      <td class="col-hide">
+        <div class="prog-wrap">
+          <div class="prog-bg"><div class="prog-fill${pct<50?' p-low':pct<100?' p-mid':''}" style="width:${pct}%"></div></div>
+          <span class="prog-pct">${pct}%</span>
+        </div>
+      </td>
       <td class="col-hide"><span class="dl ${dlClass(r.deadline,r.steps)}">${r.deadline||'—'}</span></td>
       <td>${badge(r.steps)}</td>
-      <td class="col-hide" style="font-size:12px;color:var(--muted)">${r.note||'—'}</td>
-    </tr>`).join('');
-  const total=data.length,done=data.filter(r=>getStatus(r.steps)==='done').length,
-        doing=data.filter(r=>getStatus(r.steps)==='doing').length,todo=data.filter(r=>getStatus(r.steps)==='todo').length;
-  document.getElementById('stTotal').textContent=total;
-  document.getElementById('stDone').textContent=done;
-  document.getElementById('stDoing').textContent=doing;
-  document.getElementById('stTodo').textContent=todo;
-  const now=new Date(),t=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('syncLabel').innerHTML=`<span class="dot"></span> Đồng bộ lúc ${t} — ${total} đơn hàng`;
+    </tr>`;
+  }).join('');
 }
 
-// ── JWT helpers ───────────────────────────────────────────────
-function b64url(str){return btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')}
-function b64urlUint8(u8){
-  let s='';u8.forEach(b=>s+=String.fromCharCode(b));
-  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+function renderAll(data){
+  _data=data;
+  renderDashboard(data);
+  renderTable(data);
 }
+
+// ── JWT & Auth ────────────────────────────────────────────────
+function b64url(str){return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')}
+function b64urlU8(u8){let s='';u8.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')}
 async function makeJWT(sa){
   const now=Math.floor(Date.now()/1000);
-  const header=b64url(JSON.stringify({alg:'RS256',typ:'JWT'}));
-  const payload=b64url(JSON.stringify({
-    iss:sa.client_email,
-    scope:'https://www.googleapis.com/auth/spreadsheets.readonly',
-    aud:'https://oauth2.googleapis.com/token',
-    exp:now+3600,iat:now
-  }));
-  const unsigned=`${header}.${payload}`;
+  const hdr=b64url(JSON.stringify({alg:'RS256',typ:'JWT'}));
+  const pld=b64url(JSON.stringify({iss:sa.client_email,scope:'https://www.googleapis.com/auth/spreadsheets.readonly',aud:'https://oauth2.googleapis.com/token',exp:now+3600,iat:now}));
+  const unsigned=`${hdr}.${pld}`;
   const pem=sa.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\n/g,'');
   const der=Uint8Array.from(atob(pem),c=>c.charCodeAt(0));
   const key=await crypto.subtle.importKey('pkcs8',der,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']);
   const sig=await crypto.subtle.sign('RSASSA-PKCS1-v1_5',key,new TextEncoder().encode(unsigned));
-  return`${unsigned}.${b64urlUint8(new Uint8Array(sig))}`;
+  return`${unsigned}.${b64urlU8(new Uint8Array(sig))}`;
 }
-async function getAccessToken(sa){
+async function getToken(sa){
   const jwt=await makeJWT(sa);
-  const res=await fetch('https://oauth2.googleapis.com/token',{
-    method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:`grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`
-  });
+  const res=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`});
   const j=await res.json();
-  if(!j.access_token)throw new Error('Không lấy được token: '+(j.error_description||j.error||'unknown'));
+  if(!j.access_token)throw new Error('Không lấy được token: '+(j.error_description||j.error));
   return j.access_token;
 }
 
-// ── Kết nối & fetch ───────────────────────────────────────────
+// ── Fetch Sheet ───────────────────────────────────────────────
+async function fetchSheet(){
+  setLoad(true);showAlert('','');
+  try{
+    const token=await getToken(_cfg.sa);
+    const range=encodeURIComponent(`${_cfg.sheetName}!A:H`);
+    const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${_cfg.sheetId}/values/${range}`,{headers:{Authorization:`Bearer ${token}`}});
+    const json=await res.json();
+    if(json.error){
+      let m=json.error.message;
+      if(json.error.code===403)m='❌ Không có quyền. Hãy share Sheet cho email service account.';
+      if(json.error.code===404)m='❌ Không tìm thấy Sheet. Kiểm tra lại Sheet ID.';
+      showAlert('err',m);return;
+    }
+    const rows=json.values||[];
+    const data=rows.slice(1).filter(r=>r[0]).map(r=>({
+      id:r[0]||'',name:r[1]||'',
+      steps:[0,1,2,3].map(i=>Math.min(2,Math.max(0,parseInt(r[i+2])||0))),
+      deadline:r[6]||'',note:r[7]||''
+    }));
+    renderAll(data);
+    showAlert('ok',`✓ Đồng bộ thành công — ${data.length} đơn hàng`);
+    setTimeout(()=>showAlert('',''),3000);
+    switchTab('dashboard');
+  }catch(e){
+    showAlert('err','❌ Lỗi: '+e.message);
+  }finally{setLoad(false)}
+}
+
+// ── Actions ───────────────────────────────────────────────────
 async function connect(){
   const sheetId=extractId(document.getElementById('sheetId').value.trim());
   const sheetName=document.getElementById('sheetName').value.trim()||'Sheet1';
@@ -271,50 +534,33 @@ async function connect(){
   if(!sheetId){showAlert('err','⚠ Vui lòng nhập Sheet ID.');return}
   if(!saRaw){showAlert('err','⚠ Vui lòng dán Service Account JSON.');return}
   let sa;
-  try{sa=JSON.parse(saRaw)}catch(e){showAlert('err','❌ JSON không hợp lệ. Kiểm tra lại nội dung file JSON.');return}
-  if(sa.type!=='service_account'){showAlert('err','❌ Đây không phải Service Account JSON.');return}
+  try{sa=JSON.parse(saRaw)}catch(e){showAlert('err','❌ JSON không hợp lệ.');return}
+  if(sa.type!=='service_account'){showAlert('err','❌ Không phải Service Account JSON.');return}
   _cfg={sheetId,sheetName,sa};
-  showAlert('','');
   await fetchSheet();
 }
 
 async function refresh(){
-  if(!_cfg){showAlert('err','⚠ Chưa kết nối. Hãy nhập thông tin và nhấn Kết nối trước.');return}
+  if(!_cfg){
+    if(_data.length>0){renderAll(_data);return}
+    switchTab('config');showAlert('err','⚠ Chưa kết nối. Hãy nhập thông tin trước.');return;
+  }
   await fetchSheet();
 }
 
-async function fetchSheet(){
-  setLoad(true);showAlert('','');
-  try{
-    const token=await getAccessToken(_cfg.sa);
-    const range=encodeURIComponent(`${_cfg.sheetName}!A:H`);
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${_cfg.sheetId}/values/${range}`;
-    const res=await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
-    const json=await res.json();
-    if(json.error){
-      let msg=json.error.message;
-      if(json.error.code===403)msg='❌ Không có quyền. Hãy share Sheet cho email service account.';
-      if(json.error.code===404)msg='❌ Không tìm thấy Sheet. Kiểm tra lại Sheet ID.';
-      showAlert('err',msg);return;
-    }
-    const rows=json.values||[];
-    if(rows.length<=1){render([]);showAlert('ok','✓ Kết nối thành công nhưng sheet chưa có dữ liệu.');return}
-    const data=rows.slice(1).filter(r=>r[0]).map(r=>({
-      id:r[0]||'',name:r[1]||'',
-      steps:[0,1,2,3].map(i=>Math.min(2,Math.max(0,parseInt(r[i+2])||0))),
-      deadline:r[6]||'',note:r[7]||''
-    }));
-    render(data);
-    showAlert('ok',`✓ Đồng bộ thành công — ${data.length} đơn hàng`);
-    setTimeout(()=>showAlert('',''),3000);
-  }catch(e){
-    showAlert('err','❌ Lỗi: '+e.message);
-  }finally{setLoad(false)}
+function saveConfig(){
+  localStorage.setItem('sofa_cfg_v4',JSON.stringify({
+    sheetId:document.getElementById('sheetId').value.trim(),
+    sheetName:document.getElementById('sheetName').value.trim()||'Sheet1',
+    saJson:document.getElementById('saJson').value.trim()
+  }));
+  showAlert('ok','✓ Đã lưu cấu hình.');
 }
 
 function loadDemo(){
-  showAlert('','');render(DEMO);
-  document.getElementById('syncLabel').innerHTML='<span class="dot"></span> Đang xem dữ liệu mẫu';
+  showAlert('','');
+  renderAll(DEMO);
+  switchTab('dashboard');
 }
 </script>
 </body>
