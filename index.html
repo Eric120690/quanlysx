@@ -29,12 +29,14 @@
 
   // ── Lưu thông tin kết nối lên Firebase ──
   window._saveSheetConfig = function(cfg) {
+    // Lưu vào doc riêng theo từng chế độ: sheetConnection_apikey hoặc sheetConnection_sa
+    var docName = cfg.mode === 'sa' ? 'sheetConnection_sa' : 'sheetConnection_apikey';
     var data = { savedAt: new Date().toISOString() };
     ['mode','sheetUrl','sheetTab','apiKey','saEmail','privateKey'].forEach(function(k) {
       if (cfg[k]) data[k] = cfg[k];
     });
-    _db.collection('config').doc('sheetConnection').set(data)
-      .then(function() { window.addLog && window.addLog('Đã lưu thông tin kết nối lên Firebase ✓', 'success'); })
+    _db.collection('config').doc(docName).set(data)
+      .then(function() { window.addLog && window.addLog('Đã lưu kết nối [' + (cfg.mode === 'sa' ? 'Service Account' : 'API Key') + '] lên Firebase ✓', 'success'); })
       .catch(function(e) { window.addLog && window.addLog('Lỗi lưu Firebase: ' + e.message, 'error'); });
   };
 
@@ -51,35 +53,35 @@
     _setFbStatus('Firebase...', '#7d4e00', '#fff3cd');
 
     Promise.all([
-      _db.collection('config').doc('sheetConnection').get(),
+      _db.collection('config').doc('sheetConnection_apikey').get(),
+      _db.collection('config').doc('sheetConnection_sa').get(),
       _db.collection('config').doc('colMapping').get()
     ]).then(function(results) {
-      var snapConn = results[0];
-      var snapMap  = results[1];
+      var snapApiKey = results[0];
+      var snapSA     = results[1];
+      var snapMap    = results[2];
 
-      // 1. Khôi phục thông tin kết nối
-      if (snapConn.exists) {
-        var cfg = snapConn.data();
-        window._savedSheetCfg = cfg;
-        if (cfg.mode === 'sa') {
-          if (cfg.sheetUrl) document.getElementById('sa-url').value = cfg.sheetUrl;
-          if (cfg.sheetTab) document.getElementById('sa-tab').value = cfg.sheetTab;
-          if (cfg.saEmail)  document.getElementById('sa-email').value = cfg.saEmail;
-          // private key không hiển thị lại vào form, nhưng vẫn dùng được vì lưu trong _savedSheetCfg
-        } else {
-          if (cfg.sheetUrl) document.getElementById('f-url').value = cfg.sheetUrl;
-          if (cfg.sheetTab) document.getElementById('f-tab').value = cfg.sheetTab;
-          if (cfg.apiKey)   document.getElementById('f-key').value = cfg.apiKey;
-        }
-        window.addLog && window.addLog('Đã tải kết nối [' + (cfg.mode === 'sa' ? 'Service Account' : 'API Key') + '] từ Firebase', 'success');
-      } else {
-        window.addLog && window.addLog('Chưa có cấu hình — hãy nhập thông tin Sheet', 'info');
-        setTimeout(function() {
-          document.getElementById('overlay').classList.add('open');
-        }, 600);
+      // 1. Khôi phục form API Key
+      if (snapApiKey.exists) {
+        var c = snapApiKey.data();
+        if (c.sheetUrl) document.getElementById('f-url').value = c.sheetUrl;
+        if (c.sheetTab) document.getElementById('f-tab').value = c.sheetTab;
+        if (c.apiKey)   document.getElementById('f-key').value = c.apiKey;
+        window._savedApiKeyCfg = c;
+        window.addLog && window.addLog('Đã tải cấu hình API Key từ Firebase', 'success');
       }
 
-      // 2. Khôi phục mapping cột
+      // 2. Khôi phục form Service Account
+      if (snapSA.exists) {
+        var s = snapSA.data();
+        if (s.sheetUrl) document.getElementById('sa-url').value = s.sheetUrl;
+        if (s.sheetTab) document.getElementById('sa-tab').value = s.sheetTab;
+        if (s.saEmail)  document.getElementById('sa-email').value = s.saEmail;
+        window._savedSACfg = s;
+        window.addLog && window.addLog('Đã tải cấu hình Service Account từ Firebase', 'success');
+      }
+
+      // 3. Khôi phục mapping cột
       if (snapMap.exists) {
         var m = snapMap.data();
         ['id','cu','s1','s2','s3','s4','dl'].forEach(function(k) {
@@ -91,19 +93,18 @@
 
       _setFbStatus('Firebase ✓', '#2d6a4f', '#d8f3dc');
 
-      // 3. Tự động đồng bộ
-      if (snapConn.exists) {
-        var cfg = snapConn.data();
-        var canSync = cfg.sheetUrl && (
-          (cfg.mode === 'sa' && cfg.privateKey) ||
-          (cfg.mode !== 'sa' && cfg.apiKey)     ||
-          (!cfg.mode         && cfg.apiKey)
-        );
-        if (canSync) {
-          setTimeout(function() {
-            window.autoSync && window.autoSync(cfg);
-          }, 800);
-        }
+      // 4. Mở modal nếu chưa có config nào
+      if (!snapApiKey.exists && !snapSA.exists) {
+        window.addLog && window.addLog('Chưa có cấu hình — hãy nhập thông tin Sheet', 'info');
+        setTimeout(function() { document.getElementById('overlay').classList.add('open'); }, 600);
+        return;
+      }
+
+      // 5. Tự động đồng bộ bằng chế độ nào có sẵn (ưu tiên SA nếu có)
+      if (snapSA.exists && snapSA.data().privateKey) {
+        setTimeout(function() { window.autoSync && window.autoSync(snapSA.data()); }, 800);
+      } else if (snapApiKey.exists && snapApiKey.data().apiKey) {
+        setTimeout(function() { window.autoSync && window.autoSync(snapApiKey.data()); }, 800);
       }
 
     }).catch(function(e) {
@@ -1090,23 +1091,16 @@ function copyTpl() {
   }
 }
 
-// autoSync được gọi từ Firebase module sau khi load config thành công
+// autoSync được gọi từ Firebase sau khi load config
 window.autoSync = function(cfg) {
   var mx = cfg.sheetUrl && cfg.sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   if (!mx) return;
   sheetId   = mx[1];
-  sheetTab  = cfg.sheetTab  || 'Sheet1';
-  connMode  = cfg.mode      || 'apikey';
-  apiKey    = cfg.apiKey    || '';
-  saEmail   = cfg.saEmail   || '';
+  sheetTab  = cfg.sheetTab   || 'Sheet1';
+  connMode  = cfg.mode       || 'apikey';
+  apiKey    = cfg.apiKey     || '';
+  saEmail   = cfg.saEmail    || '';
   saPrivKey = cfg.privateKey || '';
-  // Khôi phục đúng tab modal cho lần sau
-  if (connMode === 'sa') {
-    switchMode(2);
-    if (cfg.sheetUrl) document.getElementById('sa-url').value = cfg.sheetUrl;
-    if (cfg.sheetTab) document.getElementById('sa-tab').value = cfg.sheetTab;
-    if (cfg.saEmail)  document.getElementById('sa-email').value = cfg.saEmail;
-  }
   doSync();
 };
 
