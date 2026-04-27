@@ -5,118 +5,111 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sofa Production Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  const firebaseConfig = {
+<!-- Firebase compat SDK (không dùng module để tránh lỗi timing) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  const _fbApp = firebase.initializeApp({
     apiKey: "AIzaSyA2CbTvff6OXuJF4LfkE5aByAcmfQBL4Gs",
     authDomain: "quanlysanxuat-79eed.firebaseapp.com",
     projectId: "quanlysanxuat-79eed",
     storageBucket: "quanlysanxuat-79eed.firebasestorage.app",
     messagingSenderId: "697221641881",
     appId: "1:697221641881:web:3e6f913d041dbb1e7e2a08"
-  };
+  });
+  const _db = firebase.firestore();
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  function setFbStatus(text, color, bg) {
-    const el = document.getElementById('fb-status');
+  function _setFbStatus(text, color, bg) {
+    var el = document.getElementById('fb-status');
     if (!el) return;
     el.textContent = text;
     el.style.color = color;
     el.style.background = bg;
   }
 
-  // ── Lưu thông tin kết nối Sheet lên Firebase ──
-  window._saveSheetConfig = async function(cfg) {
-    try {
-      // Lưu toàn bộ fields, bỏ qua các field undefined
-      var data = { savedAt: new Date().toISOString() };
-      var fields = ['mode','sheetUrl','sheetTab','apiKey','saEmail','privateKey'];
-      fields.forEach(function(k) { if (cfg[k]) data[k] = cfg[k]; });
-      await setDoc(doc(db, 'config', 'sheetConnection'), data);
-      window.addLog('Đã lưu thông tin kết nối lên Firebase ✓', 'success');
-    } catch(e) {
-      window.addLog('Lỗi lưu Firebase: ' + e.message, 'error');
-    }
+  // ── Lưu thông tin kết nối lên Firebase ──
+  window._saveSheetConfig = function(cfg) {
+    var data = { savedAt: new Date().toISOString() };
+    ['mode','sheetUrl','sheetTab','apiKey','saEmail','privateKey'].forEach(function(k) {
+      if (cfg[k]) data[k] = cfg[k];
+    });
+    _db.collection('config').doc('sheetConnection').set(data)
+      .then(function() { window.addLog && window.addLog('Đã lưu thông tin kết nối lên Firebase ✓', 'success'); })
+      .catch(function(e) { window.addLog && window.addLog('Lỗi lưu Firebase: ' + e.message, 'error'); });
   };
 
-  // ── Lưu cấu hình mapping cột lên Firebase ──
-  window._saveColMapping = async function(mapping) {
-    try {
-      await setDoc(doc(db, 'config', 'colMapping'), {
-        ...mapping,
-        savedAt: new Date().toISOString()
-      });
-      window.addLog('Đã lưu cấu hình mapping cột lên Firebase ✓', 'success');
-    } catch(e) {
-      window.addLog('Lỗi lưu mapping: ' + e.message, 'error');
-    }
+  // ── Lưu mapping cột lên Firebase ──
+  window._saveColMapping = function(mapping) {
+    var data = Object.assign({}, mapping, { savedAt: new Date().toISOString() });
+    _db.collection('config').doc('colMapping').set(data)
+      .then(function() { window.addLog && window.addLog('Đã lưu cấu hình mapping cột lên Firebase ✓', 'success'); })
+      .catch(function(e) { window.addLog && window.addLog('Lỗi lưu mapping: ' + e.message, 'error'); });
   };
 
-  // ── Đọc toàn bộ config từ Firebase khi mở app ──
-  window.addEventListener('DOMContentLoaded', async () => {
-    setFbStatus('Firebase...', '#7d4e00', '#fff3cd');
-    try {
-      // Đọc song song cả 2 document
-      const [snapConn, snapMap] = await Promise.all([
-        getDoc(doc(db, 'config', 'sheetConnection')),
-        getDoc(doc(db, 'config', 'colMapping'))
-      ]);
+  // ── Đọc config khi app khởi động ──
+  document.addEventListener('DOMContentLoaded', function() {
+    _setFbStatus('Firebase...', '#7d4e00', '#fff3cd');
 
-      // 1. Khôi phục thông tin kết nối Sheet
-      if (snapConn.exists()) {
-        const cfg = snapConn.data();
+    Promise.all([
+      _db.collection('config').doc('sheetConnection').get(),
+      _db.collection('config').doc('colMapping').get()
+    ]).then(function(results) {
+      var snapConn = results[0];
+      var snapMap  = results[1];
+
+      // 1. Khôi phục thông tin kết nối
+      if (snapConn.exists) {
+        var cfg = snapConn.data();
         window._savedSheetCfg = cfg;
         if (cfg.mode === 'sa') {
-          // Khôi phục form Service Account
           if (cfg.sheetUrl) document.getElementById('sa-url').value = cfg.sheetUrl;
           if (cfg.sheetTab) document.getElementById('sa-tab').value = cfg.sheetTab;
           if (cfg.saEmail)  document.getElementById('sa-email').value = cfg.saEmail;
-          // Không điền lại private key vào form vì lý do bảo mật
+          // private key không hiển thị lại vào form, nhưng vẫn dùng được vì lưu trong _savedSheetCfg
         } else {
-          // Khôi phục form API Key
           if (cfg.sheetUrl) document.getElementById('f-url').value = cfg.sheetUrl;
           if (cfg.sheetTab) document.getElementById('f-tab').value = cfg.sheetTab;
           if (cfg.apiKey)   document.getElementById('f-key').value = cfg.apiKey;
         }
-        window.addLog('Đã tải thông tin kết nối [' + (cfg.mode === 'sa' ? 'Service Account' : 'API Key') + '] từ Firebase', 'success');
+        window.addLog && window.addLog('Đã tải kết nối [' + (cfg.mode === 'sa' ? 'Service Account' : 'API Key') + '] từ Firebase', 'success');
       } else {
-        window.addLog('Chưa có cấu hình — hãy nhập thông tin Sheet', 'info');
-        setTimeout(() => document.getElementById('overlay').classList.add('open'), 600);
+        window.addLog && window.addLog('Chưa có cấu hình — hãy nhập thông tin Sheet', 'info');
+        setTimeout(function() {
+          document.getElementById('overlay').classList.add('open');
+        }, 600);
       }
 
-      // 2. Khôi phục mapping tên cột
-      if (snapMap.exists()) {
-        const m = snapMap.data();
-        const fields = ['id','cu','s1','s2','s3','s4','dl'];
-        fields.forEach(k => {
-          const el = document.getElementById('m-' + k);
+      // 2. Khôi phục mapping cột
+      if (snapMap.exists) {
+        var m = snapMap.data();
+        ['id','cu','s1','s2','s3','s4','dl'].forEach(function(k) {
+          var el = document.getElementById('m-' + k);
           if (el && m[k]) el.value = m[k];
         });
-        window.addLog('Đã tải cấu hình mapping cột từ Firebase', 'success');
+        window.addLog && window.addLog('Đã tải mapping cột từ Firebase', 'success');
       }
 
-      setFbStatus('Firebase ✓', '#2d6a4f', '#d8f3dc');
+      _setFbStatus('Firebase ✓', '#2d6a4f', '#d8f3dc');
 
-      // 3. Tự động đồng bộ nếu có đủ thông tin kết nối
-      if (snapConn.exists()) {
-        const cfg = snapConn.data();
-        const canSync = cfg.sheetUrl && (
-          (cfg.mode === 'sa'     && cfg.privateKey) ||
-          (cfg.mode !== 'sa'    && cfg.apiKey) ||
-          (!cfg.mode             && cfg.apiKey)
+      // 3. Tự động đồng bộ
+      if (snapConn.exists) {
+        var cfg = snapConn.data();
+        var canSync = cfg.sheetUrl && (
+          (cfg.mode === 'sa' && cfg.privateKey) ||
+          (cfg.mode !== 'sa' && cfg.apiKey)     ||
+          (!cfg.mode         && cfg.apiKey)
         );
         if (canSync) {
-          setTimeout(() => window.autoSync && window.autoSync(cfg), 800);
+          setTimeout(function() {
+            window.autoSync && window.autoSync(cfg);
+          }, 800);
         }
       }
-    } catch(e) {
-      setFbStatus('Firebase ✗', '#9b2226', '#fde8e8');
-      window.addLog('Lỗi Firebase: ' + e.message, 'error');
-    }
+
+    }).catch(function(e) {
+      _setFbStatus('Firebase ✗', '#9b2226', '#fde8e8');
+      window.addLog && window.addLog('Lỗi Firebase: ' + e.message, 'error');
+    });
   });
 </script>
 <style>
