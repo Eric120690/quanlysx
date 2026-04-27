@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, writeBatch, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA2CbTvff6OXuJF4LfkE5aByAcmfQBL4Gs",
@@ -21,132 +21,50 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Expose firebase functions to window for use in non-module scripts
-  window._fb = {
-    db,
-    collection, doc, setDoc, getDocs, deleteDoc, writeBatch, serverTimestamp, query, orderBy
+  // ── Lưu thông tin kết nối Sheet lên Firebase ──
+  window._saveSheetConfig = async function(cfg) {
+    try {
+      await setDoc(doc(db, 'config', 'sheetConnection'), {
+        sheetUrl: cfg.sheetUrl,
+        sheetTab: cfg.sheetTab,
+        apiKey:   cfg.apiKey,
+        savedAt:  new Date().toISOString()
+      });
+      window.addLog('Đã lưu thông tin kết nối lên Firebase ✓', 'success');
+    } catch(e) {
+      window.addLog('Lỗi lưu Firebase: ' + e.message, 'error');
+    }
   };
 
-  // Load orders from Firestore on startup
+  // ── Đọc thông tin kết nối Sheet từ Firebase khi mở app ──
   window.addEventListener('DOMContentLoaded', async () => {
-    setFbStatus('connecting');
+    const fbDot = document.getElementById('fb-status');
     try {
-      const snap = await getDocs(query(collection(db, 'orders'), orderBy('syncedAt', 'desc')));
-      if (!snap.empty) {
-        window.orders = snap.docs.map(d => d.data());
-        window.render();
-        window.updateStats();
-        const lastSync = window.orders[0]?.syncedAt?.toDate?.();
-        const label = lastSync
-          ? 'Firebase · ' + lastSync.toLocaleString('vi-VN') + ' · ' + window.orders.length + ' đơn'
-          : 'Firebase · ' + window.orders.length + ' đơn hàng';
-        document.getElementById('sync-label').textContent = label;
-        window.addLog('Đã tải ' + window.orders.length + ' đơn từ Firebase', 'success');
+      const snap = await getDoc(doc(db, 'config', 'sheetConnection'));
+      if (snap.exists()) {
+        const cfg = snap.data();
+        // Điền sẵn vào form modal
+        if (cfg.sheetUrl) document.getElementById('f-url').value = cfg.sheetUrl;
+        if (cfg.sheetTab) document.getElementById('f-tab').value = cfg.sheetTab;
+        if (cfg.apiKey)   document.getElementById('f-key').value = cfg.apiKey;
+        // Lưu vào biến toàn cục để tự đồng bộ
+        window._savedSheetCfg = cfg;
+        if (fbDot) { fbDot.textContent = 'Firebase ✓'; fbDot.style.background = '#d8f3dc'; fbDot.style.color = '#2d6a4f'; }
+        window.addLog('Đã tải thông tin kết nối từ Firebase', 'success');
+        // Tự động đồng bộ nếu có đủ thông tin
+        if (cfg.sheetUrl && cfg.apiKey) {
+          setTimeout(() => window.autoSync && window.autoSync(cfg), 800);
+        }
       } else {
-        document.getElementById('sync-label').textContent = 'Firebase kết nối · Chưa có dữ liệu';
-        window.addLog('Firebase kết nối — chưa có dữ liệu, hãy đồng bộ từ Google Sheet', 'info');
+        if (fbDot) { fbDot.textContent = 'Firebase ✓'; fbDot.style.background = '#d8f3dc'; fbDot.style.color = '#2d6a4f'; }
+        window.addLog('Firebase kết nối — chưa có cấu hình, hãy nhập thông tin Sheet', 'info');
+        // Mở modal để nhập lần đầu
+        setTimeout(() => document.getElementById('overlay').classList.add('open'), 600);
       }
-      setFbStatus('connected');
     } catch(e) {
-      setFbStatus('error');
+      if (fbDot) { fbDot.textContent = 'Firebase ✗'; fbDot.style.background = '#fde8e8'; fbDot.style.color = '#9b2226'; }
       window.addLog('Lỗi Firebase: ' + e.message, 'error');
     }
-  });
-
-  function setFbStatus(s) {
-    const el = document.getElementById('fb-status');
-    if (!el) return;
-    const map = {
-      connecting: { text: 'Firebase...', color: '#7d4e00', bg: '#fff3cd' },
-      connected:  { text: 'Firebase ✓',  color: '#2d6a4f', bg: '#d8f3dc' },
-      error:      { text: 'Firebase ✗',  color: '#9b2226', bg: '#fde8e8' },
-      saving:     { text: 'Đang lưu...', color: '#1a4e8c', bg: '#dbeafe' },
-      saved:      { text: 'Đã lưu ✓',    color: '#2d6a4f', bg: '#d8f3dc' },
-    };
-    const cfg = map[s] || map.connected;
-    el.textContent = cfg.text;
-    el.style.color = cfg.color;
-    el.style.background = cfg.bg;
-    el._setStatus = setFbStatus;
-  }
-  window._setFbStatus = setFbStatus;
-
-  // Save orders to Firestore (called after sync)
-  window._saveToFirebase = async function(ordersData) {
-    window._setFbStatus('saving');
-    try {
-      const { db, collection, doc, writeBatch, serverTimestamp } = window._fb;
-      // Delete all existing, then re-write (batch)
-      const existing = await getDocs(collection(db, 'orders'));
-      const BATCH_LIMIT = 490;
-      let batch = writeBatch(db);
-      let count = 0;
-      for (const d of existing.docs) {
-        batch.delete(d.ref);
-        count++;
-        if (count >= BATCH_LIMIT) {
-          await batch.commit();
-          batch = writeBatch(db);
-          count = 0;
-        }
-      }
-      if (count > 0) await batch.commit();
-
-      // Write new data
-      batch = writeBatch(db);
-      count = 0;
-      const ts = serverTimestamp();
-      for (const o of ordersData) {
-        const ref = doc(collection(db, 'orders'), o.id);
-        batch.set(ref, { ...o, syncedAt: ts });
-        count++;
-        if (count >= BATCH_LIMIT) {
-          await batch.commit();
-          batch = writeBatch(db);
-          count = 0;
-        }
-      }
-      if (count > 0) await batch.commit();
-
-      window._setFbStatus('saved');
-      setTimeout(() => window._setFbStatus('connected'), 2500);
-      window.addLog('Đã lưu ' + ordersData.length + ' đơn hàng lên Firebase', 'success');
-      return true;
-    } catch(e) {
-      window._setFbStatus('error');
-      window.addLog('Lỗi lưu Firebase: ' + e.message, 'error');
-      return false;
-    }
-  };
-
-  // Save config to Firestore
-  window._saveConfigToFirebase = async function(cfg) {
-    try {
-      const { db, doc, setDoc, serverTimestamp } = window._fb;
-      await setDoc(doc(db, 'config', 'colMapping'), { ...cfg, updatedAt: serverTimestamp() });
-      window.addLog('Đã lưu cấu hình cột lên Firebase', 'success');
-    } catch(e) {
-      window.addLog('Lỗi lưu cấu hình: ' + e.message, 'error');
-    }
-  };
-
-  // Load config from Firestore
-  window.addEventListener('DOMContentLoaded', async () => {
-    try {
-      const { db, doc, getDocs, collection } = window._fb;
-      const snap = await getDocs(collection(db, 'config'));
-      snap.forEach(d => {
-        if (d.id === 'colMapping') {
-          const cfg = d.data();
-          ['id','cu','s1','s2','s3','s4','dl'].forEach(k => {
-            const el = document.getElementById('m-' + k);
-            if (el && cfg[k]) el.value = cfg[k];
-          });
-          // also restore sheet connection info
-          if (cfg.sheetId) window._sheetCfg = { sheetId: cfg.sheetId, sheetTab: cfg.sheetTab, apiKey: cfg.apiKey };
-        }
-      });
-    } catch(e) { /* silent */ }
   });
 </script>
 <style>
@@ -535,7 +453,7 @@
     </button>
     <button class="btn btn-dark" id="sync-btn" onclick="doSync()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-      Đồng bộ &amp; Lưu
+      Đồng bộ
     </button>
   </div>
 </div>
@@ -851,21 +769,21 @@ function doConnect() {
   var m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   if (!m) { alert('URL không hợp lệ. Vui lòng kiểm tra lại.'); return; }
   sheetId = m[1]; sheetTab = tab; apiKey = key;
-  // Save sheet config to Firebase
-  if (window._saveConfigToFirebase) {
-    window._saveConfigToFirebase({ sheetId: sheetId, sheetTab: sheetTab, apiKey: apiKey });
+  // Lưu thông tin kết nối lên Firebase
+  if (window._saveSheetConfig) {
+    window._saveSheetConfig({ sheetUrl: url, sheetTab: tab, apiKey: key });
   }
   closeModal();
   doSync();
 }
 
 async function doSync() {
+  // Nếu chưa có sheetId, thử lấy từ config đã lưu trên Firebase
   if (!sheetId || !apiKey) {
-    // Try restoring saved config
-    if (window._sheetCfg) {
-      sheetId = window._sheetCfg.sheetId;
-      sheetTab = window._sheetCfg.sheetTab;
-      apiKey = window._sheetCfg.apiKey;
+    var saved = window._savedSheetCfg;
+    if (saved && saved.sheetUrl && saved.apiKey) {
+      var m2 = saved.sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      if (m2) { sheetId = m2[1]; sheetTab = saved.sheetTab || 'Sheet1'; apiKey = saved.apiKey; }
     } else {
       openModal(); return;
     }
@@ -887,17 +805,13 @@ async function doSync() {
     orders = parsed;
     render(); updateStats();
     var now = new Date().toLocaleString('vi-VN');
-    document.getElementById('sync-label').innerHTML = 'Sheet đồng bộ ' + now + ' &nbsp;·&nbsp; ' + orders.length + ' đơn';
-    addLog('Google Sheet → tải về ' + orders.length + ' đơn hàng', 'success');
-    // Save to Firebase
-    if (window._saveToFirebase) {
-      await window._saveToFirebase(orders);
-    }
+    document.getElementById('sync-label').innerHTML = 'Đồng bộ lúc ' + now + ' &nbsp;·&nbsp; ' + orders.length + ' đơn';
+    addLog('Đồng bộ thành công — ' + orders.length + ' đơn hàng', 'success');
   } catch(e) {
     addLog('Lỗi đồng bộ: ' + e.message, 'error');
     alert('Không thể đồng bộ: ' + e.message);
   }
-  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg> Đồng bộ &amp; Lưu';
+  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg> Đồng bộ';
   btn.disabled = false;
 }
 
@@ -918,26 +832,11 @@ function loadDemo() {
   render(); updateStats();
   document.getElementById('sync-label').textContent = 'Dữ liệu mẫu · ' + orders.length + ' đơn hàng';
   addLog('Đã tải dữ liệu mẫu — ' + orders.length + ' đơn hàng', 'success');
-  // Also save demo to Firebase
-  if (window._saveToFirebase) window._saveToFirebase(orders);
 }
 
 function saveCfg() {
-  var cfg = {
-    id:  document.getElementById('m-id').value.trim() || 'order_id',
-    cu:  document.getElementById('m-cu').value.trim() || 'customer',
-    s1:  document.getElementById('m-s1').value.trim() || 'step1_status',
-    s2:  document.getElementById('m-s2').value.trim() || 'step2_status',
-    s3:  document.getElementById('m-s3').value.trim() || 'step3_status',
-    s4:  document.getElementById('m-s4').value.trim() || 'step4_status',
-    dl:  document.getElementById('m-dl').value.trim() || 'deadline',
-    sheetId: sheetId,
-    sheetTab: sheetTab,
-    apiKey: apiKey
-  };
   addLog('Đã lưu cấu hình mapping cột', 'info');
-  if (window._saveConfigToFirebase) window._saveConfigToFirebase(cfg);
-  else alert('Đã lưu! Nhấn Đồng bộ để áp dụng cấu hình mới.');
+  alert('Đã lưu! Nhấn Đồng bộ để áp dụng cấu hình mới.');
 }
 
 function copyTpl() {
@@ -948,6 +847,17 @@ function copyTpl() {
     alert('Header: ' + txt);
   }
 }
+
+// autoSync được gọi từ Firebase module sau khi load config thành công
+window.autoSync = function(cfg) {
+  var m = cfg.sheetUrl && cfg.sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (m) {
+    sheetId  = m[1];
+    sheetTab = cfg.sheetTab || 'Sheet1';
+    apiKey   = cfg.apiKey;
+    doSync();
+  }
+};
 
 // init
 render();
