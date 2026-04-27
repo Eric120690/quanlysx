@@ -100,11 +100,26 @@
         return;
       }
 
-      // 5. Tự động đồng bộ bằng chế độ nào có sẵn (ưu tiên SA nếu có)
+      // 5. Tự động đồng bộ — đợi autoSync sẵn sàng rồi mới gọi
+      var cfgToSync = null;
       if (snapSA.exists && snapSA.data().privateKey) {
-        setTimeout(function() { window.autoSync && window.autoSync(snapSA.data()); }, 800);
+        cfgToSync = snapSA.data();
       } else if (snapApiKey.exists && snapApiKey.data().apiKey) {
-        setTimeout(function() { window.autoSync && window.autoSync(snapApiKey.data()); }, 800);
+        cfgToSync = snapApiKey.data();
+      }
+      if (cfgToSync) {
+        var _cfg = cfgToSync;
+        var _tries = 0;
+        var _wait = setInterval(function() {
+          _tries++;
+          if (typeof window.autoSync === 'function') {
+            clearInterval(_wait);
+            window.autoSync(_cfg);
+          } else if (_tries > 20) { // timeout sau 2 giây
+            clearInterval(_wait);
+            window.addLog && window.addLog('Không thể tự động đồng bộ', 'error');
+          }
+        }, 100);
       }
 
     }).catch(function(e) {
