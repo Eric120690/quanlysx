@@ -441,31 +441,91 @@
 
 <!-- MODAL -->
 <div class="overlay" id="overlay">
-  <div class="modal">
+  <div class="modal" style="max-width:480px;">
     <div class="modal-title">Kết nối Google Sheet</div>
-    <div class="modal-sub">Nhập thông tin để đồng bộ dữ liệu sản xuất từ Google Sheets</div>
-    <div class="form-group">
-      <label class="form-label">URL Google Sheet</label>
-      <input class="form-inp" id="f-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." />
-      <div class="form-hint">Sheet phải được chia sẻ công khai (Anyone with link – Viewer)</div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Tên tab (sheet)</label>
-      <input class="form-inp" id="f-tab" value="Sheet1" placeholder="Sheet1" />
-    </div>
-    <div class="form-group">
-      <label class="form-label">Google Sheets API Key</label>
-      <input class="form-inp" id="f-key" type="text" placeholder="AIzaSy..." />
-      <div class="form-hint">Google Cloud Console → APIs &amp; Services → Credentials → Create API Key</div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-dark" onclick="doConnect()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-4"/><path d="M14 3h7v7M21 3l-9 9"/></svg>
-        Kết nối
+    <div class="modal-sub">Chọn chế độ kết nối phù hợp với cách bạn thiết lập Google Sheet</div>
+
+    <!-- Mode tabs -->
+    <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:18px;">
+      <button id="mode-tab-1" onclick="switchMode(1)"
+        style="flex:1;padding:9px 0;font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;border:none;background:#1a1916;color:#fff;transition:all 0.15s;">
+        🔑 API Key
       </button>
-      <button class="btn" onclick="loadDemo()" style="flex:0.8;">Dữ liệu mẫu</button>
-      <button class="btn" onclick="closeModal()" style="flex:0.5;">Huỷ</button>
+      <button id="mode-tab-2" onclick="switchMode(2)"
+        style="flex:1;padding:9px 0;font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;border:none;background:var(--surface2);color:var(--text2);transition:all 0.15s;">
+        🔒 Service Account
+      </button>
     </div>
+
+    <!-- Chế độ 1: API Key -->
+    <div id="mode-1">
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.6;">
+        <strong>Ưu điểm:</strong> Đơn giản, nhanh<br>
+        <strong>Yêu cầu:</strong> Sheet phải chia sẻ công khai (Anyone with link)
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL Google Sheet</label>
+        <input class="form-inp" id="f-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tên tab (sheet)</label>
+        <input class="form-inp" id="f-tab" value="Sheet1" placeholder="Sheet1" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Google Sheets API Key</label>
+        <input class="form-inp" id="f-key" type="text" placeholder="AIzaSy..." />
+        <div class="form-hint">Google Cloud Console → APIs &amp; Services → Credentials → Create API Key</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-dark" onclick="doConnect()" style="flex:1.2;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-4"/><path d="M14 3h7v7M21 3l-9 9"/></svg>
+          Kết nối
+        </button>
+        <button class="btn" onclick="loadDemo()">Dữ liệu mẫu</button>
+        <button class="btn" onclick="closeModal()">Huỷ</button>
+      </div>
+    </div>
+
+    <!-- Chế độ 2: Service Account -->
+    <div id="mode-2" style="display:none;">
+      <div style="background:#fffbea;border:1px solid #f0d060;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:12px;color:#7a5c00;line-height:1.6;">
+        <strong>Ưu điểm:</strong> Bảo mật hơn, không cần chia sẻ công khai<br>
+        <strong>Yêu cầu:</strong> Chỉ cần share Sheet cho email Service Account
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL Google Sheet</label>
+        <input class="form-inp" id="sa-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tên tab (sheet)</label>
+        <input class="form-inp" id="sa-tab" value="Sheet1" placeholder="Sheet1" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Account Email</label>
+        <input class="form-inp" id="sa-email" type="text" placeholder="name@project-id.iam.gserviceaccount.com" />
+        <div class="form-hint">Google Cloud Console → IAM &amp; Admin → Service Accounts → Create</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Private Key (JSON)</label>
+        <textarea class="form-inp" id="sa-key" rows="4"
+          placeholder='Dán nội dung file .json tải từ Service Account vào đây...'
+          style="resize:vertical;font-family:var(--font-mono,monospace);font-size:11px;line-height:1.5;"></textarea>
+        <div class="form-hint">Service Account → Keys → Add Key → JSON → tải file về → dán nội dung vào đây</div>
+      </div>
+      <div id="sa-share-hint" style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.7;display:none;">
+        <strong>📋 Bước tiếp theo:</strong> Mở Google Sheet → Chia sẻ → Dán email bên dưới → Viewer<br>
+        <span id="sa-email-display" style="font-family:monospace;font-size:11px;background:var(--border);padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px;word-break:break-all;"></span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-dark" onclick="doConnectSA()" style="flex:1.2;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Kết nối
+        </button>
+        <button class="btn" onclick="loadDemo()">Dữ liệu mẫu</button>
+        <button class="btn" onclick="closeModal()">Huỷ</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -643,7 +703,9 @@
 <script>
 var orders = [];
 var logs = [];
+var connMode = 'apikey'; // 'apikey' hoặc 'sa'
 var sheetId = '', sheetTab = 'Sheet1', apiKey = '';
+var saEmail = '', saPrivKey = '';
 
 // Expose functions needed by Firebase module
 window.orders = orders;
@@ -800,6 +862,109 @@ function parseRows(rows) {
   });
 }
 
+// ── Chuyển chế độ kết nối ──
+function switchMode(m) {
+  document.getElementById('mode-1').style.display = m === 1 ? 'block' : 'none';
+  document.getElementById('mode-2').style.display = m === 2 ? 'block' : 'none';
+  document.getElementById('mode-tab-1').style.background = m === 1 ? '#1a1916' : 'var(--surface2)';
+  document.getElementById('mode-tab-1').style.color      = m === 1 ? '#fff'     : 'var(--text2)';
+  document.getElementById('mode-tab-2').style.background = m === 2 ? '#1a1916' : 'var(--surface2)';
+  document.getElementById('mode-tab-2').style.color      = m === 2 ? '#fff'     : 'var(--text2)';
+}
+
+// ── Kết nối chế độ 2: Service Account ──
+// Vì private key không thể gọi trực tiếp từ browser (CORS + bảo mật),
+// ta dùng Apps Script làm proxy: publish 1 Web App trên Google Apps Script
+// nhận sheetId + tab, trả về JSON dữ liệu, xác thực bằng email SA.
+// Cách đơn giản nhất trong browser: dùng Google Apps Script Web App (doGet).
+async function doConnectSA() {
+  var url    = document.getElementById('sa-url').value.trim();
+  var tab    = document.getElementById('sa-tab').value.trim() || 'Sheet1';
+  var email  = document.getElementById('sa-email').value.trim();
+  var keyRaw = document.getElementById('sa-key').value.trim();
+
+  if (!url || !email || !keyRaw) {
+    alert('Vui lòng nhập đầy đủ URL, Email và Private Key JSON.'); return;
+  }
+  var mUrl = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (!mUrl) { alert('URL không hợp lệ.'); return; }
+
+  // Parse JSON key file
+  var keyJson;
+  try { keyJson = JSON.parse(keyRaw); } catch(e) { alert('File JSON không hợp lệ: ' + e.message); return; }
+
+  // Hiển thị email để user share sheet
+  document.getElementById('sa-email-display').textContent = keyJson.client_email || email;
+  document.getElementById('sa-share-hint').style.display = 'block';
+
+  var saConfig = {
+    mode: 'sa',
+    sheetUrl: url,
+    sheetTab: tab,
+    saEmail:  keyJson.client_email || email,
+    // Lưu private_key để tạo JWT
+    privateKey: keyJson.private_key,
+    savedAt: new Date().toISOString()
+  };
+
+  connMode   = 'sa';
+  sheetId    = mUrl[1];
+  sheetTab   = tab;
+  saEmail    = keyJson.client_email || email;
+  saPrivKey  = keyJson.private_key;
+
+  if (window._saveSheetConfig) window._saveSheetConfig(saConfig);
+  closeModal();
+  doSync();
+}
+
+// ── Tạo JWT cho Service Account (dùng Web Crypto API) ──
+async function makeJWT(email, privateKeyPem) {
+  var now = Math.floor(Date.now() / 1000);
+  var header  = { alg: 'RS256', typ: 'JWT' };
+  var payload = {
+    iss: email,
+    scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now
+  };
+  var b64 = function(obj) {
+    return btoa(JSON.stringify(obj)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  };
+  var sigInput = b64(header) + '.' + b64(payload);
+
+  // Import PEM private key
+  var pemBody = privateKeyPem.replace(/-----[^-]+-----/g,'').replace(/\s/g,'');
+  var keyBuf  = Uint8Array.from(atob(pemBody), c => c.charCodeAt(0)).buffer;
+  var cryptoKey = await crypto.subtle.importKey(
+    'pkcs8', keyBuf,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false, ['sign']
+  );
+  var sig = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5', cryptoKey,
+    new TextEncoder().encode(sigInput)
+  );
+  var b64Sig = btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+
+  return sigInput + '.' + b64Sig;
+}
+
+// ── Lấy Access Token từ Service Account JWT ──
+async function getAccessToken(email, privateKey) {
+  var jwt = await makeJWT(email, privateKey);
+  var res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt
+  });
+  var data = await res.json();
+  if (!data.access_token) throw new Error(data.error_description || 'Không lấy được token');
+  return data.access_token;
+}
+
 function doConnect() {
   var url = document.getElementById('f-url').value.trim();
   var tab = document.getElementById('f-tab').value.trim() || 'Sheet1';
@@ -807,33 +972,51 @@ function doConnect() {
   if (!url || !key) { alert('Vui lòng nhập đầy đủ URL Google Sheet và API Key.'); return; }
   var m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   if (!m) { alert('URL không hợp lệ. Vui lòng kiểm tra lại.'); return; }
+  connMode = 'apikey';
   sheetId = m[1]; sheetTab = tab; apiKey = key;
-  // Lưu thông tin kết nối lên Firebase
   if (window._saveSheetConfig) {
-    window._saveSheetConfig({ sheetUrl: url, sheetTab: tab, apiKey: key });
+    window._saveSheetConfig({ mode: 'apikey', sheetUrl: url, sheetTab: tab, apiKey: key });
   }
   closeModal();
   doSync();
 }
 
 async function doSync() {
-  // Nếu chưa có sheetId, thử lấy từ config đã lưu trên Firebase
-  if (!sheetId || !apiKey) {
+  // Khôi phục từ Firebase nếu chưa có config
+  if (!sheetId) {
     var saved = window._savedSheetCfg;
-    if (saved && saved.sheetUrl && saved.apiKey) {
-      var m2 = saved.sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-      if (m2) { sheetId = m2[1]; sheetTab = saved.sheetTab || 'Sheet1'; apiKey = saved.apiKey; }
-    } else {
-      openModal(); return;
-    }
+    if (saved && saved.sheetUrl) {
+      var mx = saved.sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      if (mx) {
+        sheetId   = mx[1];
+        sheetTab  = saved.sheetTab || 'Sheet1';
+        connMode  = saved.mode || 'apikey';
+        apiKey    = saved.apiKey || '';
+        saEmail   = saved.saEmail || '';
+        saPrivKey = saved.privateKey || '';
+      }
+    } else { openModal(); return; }
   }
+
   var btn = document.getElementById('sync-btn');
   btn.innerHTML = '<div class="spinner"></div> Đang đồng bộ...';
   btn.disabled = true;
+
   try {
     var range = encodeURIComponent(sheetTab + '!A:Z');
-    var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/' + range + '?key=' + apiKey;
-    var res = await fetch(url);
+    var fetchUrl, fetchOpts = {};
+
+    if (connMode === 'sa' && saEmail && saPrivKey) {
+      // Chế độ Service Account — lấy access token trước
+      var token = await getAccessToken(saEmail, saPrivKey);
+      fetchUrl  = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/' + range;
+      fetchOpts = { headers: { 'Authorization': 'Bearer ' + token } };
+    } else {
+      // Chế độ API Key
+      fetchUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/' + range + '?key=' + apiKey;
+    }
+
+    var res = await fetch(fetchUrl, fetchOpts);
     if (!res.ok) {
       var err = await res.json();
       throw new Error((err.error && err.error.message) || 'Lỗi ' + res.status);
@@ -844,8 +1027,9 @@ async function doSync() {
     orders = parsed;
     render(); updateStats();
     var now = new Date().toLocaleString('vi-VN');
-    document.getElementById('sync-label').innerHTML = 'Đồng bộ lúc ' + now + ' &nbsp;·&nbsp; ' + orders.length + ' đơn';
-    addLog('Đồng bộ thành công — ' + orders.length + ' đơn hàng', 'success');
+    var modeLabel = connMode === 'sa' ? '🔒 SA' : '🔑 API Key';
+    document.getElementById('sync-label').innerHTML = modeLabel + ' · ' + now + ' &nbsp;·&nbsp; ' + orders.length + ' đơn';
+    addLog('Đồng bộ thành công [' + (connMode==='sa'?'Service Account':'API Key') + '] — ' + orders.length + ' đơn', 'success');
   } catch(e) {
     addLog('Lỗi đồng bộ: ' + e.message, 'error');
     alert('Không thể đồng bộ: ' + e.message);
@@ -902,13 +1086,22 @@ function copyTpl() {
 
 // autoSync được gọi từ Firebase module sau khi load config thành công
 window.autoSync = function(cfg) {
-  var m = cfg.sheetUrl && cfg.sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  if (m) {
-    sheetId  = m[1];
-    sheetTab = cfg.sheetTab || 'Sheet1';
-    apiKey   = cfg.apiKey;
-    doSync();
+  var mx = cfg.sheetUrl && cfg.sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (!mx) return;
+  sheetId   = mx[1];
+  sheetTab  = cfg.sheetTab  || 'Sheet1';
+  connMode  = cfg.mode      || 'apikey';
+  apiKey    = cfg.apiKey    || '';
+  saEmail   = cfg.saEmail   || '';
+  saPrivKey = cfg.privateKey || '';
+  // Khôi phục đúng tab modal cho lần sau
+  if (connMode === 'sa') {
+    switchMode(2);
+    if (cfg.sheetUrl) document.getElementById('sa-url').value = cfg.sheetUrl;
+    if (cfg.sheetTab) document.getElementById('sa-tab').value = cfg.sheetTab;
+    if (cfg.saEmail)  document.getElementById('sa-email').value = cfg.saEmail;
   }
+  doSync();
 };
 
 // init
