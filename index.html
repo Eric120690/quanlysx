@@ -21,6 +21,14 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  function setFbStatus(text, color, bg) {
+    const el = document.getElementById('fb-status');
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = color;
+    el.style.background = bg;
+  }
+
   // ── Lưu thông tin kết nối Sheet lên Firebase ──
   window._saveSheetConfig = async function(cfg) {
     try {
@@ -30,39 +38,70 @@
         apiKey:   cfg.apiKey,
         savedAt:  new Date().toISOString()
       });
-      window.addLog('Đã lưu thông tin kết nối lên Firebase ✓', 'success');
+      window.addLog('Đã lưu thông tin kết nối Sheet lên Firebase ✓', 'success');
     } catch(e) {
       window.addLog('Lỗi lưu Firebase: ' + e.message, 'error');
     }
   };
 
-  // ── Đọc thông tin kết nối Sheet từ Firebase khi mở app ──
-  window.addEventListener('DOMContentLoaded', async () => {
-    const fbDot = document.getElementById('fb-status');
+  // ── Lưu cấu hình mapping cột lên Firebase ──
+  window._saveColMapping = async function(mapping) {
     try {
-      const snap = await getDoc(doc(db, 'config', 'sheetConnection'));
-      if (snap.exists()) {
-        const cfg = snap.data();
-        // Điền sẵn vào form modal
+      await setDoc(doc(db, 'config', 'colMapping'), {
+        ...mapping,
+        savedAt: new Date().toISOString()
+      });
+      window.addLog('Đã lưu cấu hình mapping cột lên Firebase ✓', 'success');
+    } catch(e) {
+      window.addLog('Lỗi lưu mapping: ' + e.message, 'error');
+    }
+  };
+
+  // ── Đọc toàn bộ config từ Firebase khi mở app ──
+  window.addEventListener('DOMContentLoaded', async () => {
+    setFbStatus('Firebase...', '#7d4e00', '#fff3cd');
+    try {
+      // Đọc song song cả 2 document
+      const [snapConn, snapMap] = await Promise.all([
+        getDoc(doc(db, 'config', 'sheetConnection')),
+        getDoc(doc(db, 'config', 'colMapping'))
+      ]);
+
+      // 1. Khôi phục thông tin kết nối Sheet
+      if (snapConn.exists()) {
+        const cfg = snapConn.data();
         if (cfg.sheetUrl) document.getElementById('f-url').value = cfg.sheetUrl;
         if (cfg.sheetTab) document.getElementById('f-tab').value = cfg.sheetTab;
         if (cfg.apiKey)   document.getElementById('f-key').value = cfg.apiKey;
-        // Lưu vào biến toàn cục để tự đồng bộ
         window._savedSheetCfg = cfg;
-        if (fbDot) { fbDot.textContent = 'Firebase ✓'; fbDot.style.background = '#d8f3dc'; fbDot.style.color = '#2d6a4f'; }
         window.addLog('Đã tải thông tin kết nối từ Firebase', 'success');
-        // Tự động đồng bộ nếu có đủ thông tin
+      } else {
+        window.addLog('Chưa có cấu hình — hãy nhập thông tin Sheet', 'info');
+        setTimeout(() => document.getElementById('overlay').classList.add('open'), 600);
+      }
+
+      // 2. Khôi phục mapping tên cột
+      if (snapMap.exists()) {
+        const m = snapMap.data();
+        const fields = ['id','cu','s1','s2','s3','s4','dl'];
+        fields.forEach(k => {
+          const el = document.getElementById('m-' + k);
+          if (el && m[k]) el.value = m[k];
+        });
+        window.addLog('Đã tải cấu hình mapping cột từ Firebase', 'success');
+      }
+
+      setFbStatus('Firebase ✓', '#2d6a4f', '#d8f3dc');
+
+      // 3. Tự động đồng bộ nếu có đủ thông tin kết nối
+      if (snapConn.exists()) {
+        const cfg = snapConn.data();
         if (cfg.sheetUrl && cfg.apiKey) {
           setTimeout(() => window.autoSync && window.autoSync(cfg), 800);
         }
-      } else {
-        if (fbDot) { fbDot.textContent = 'Firebase ✓'; fbDot.style.background = '#d8f3dc'; fbDot.style.color = '#2d6a4f'; }
-        window.addLog('Firebase kết nối — chưa có cấu hình, hãy nhập thông tin Sheet', 'info');
-        // Mở modal để nhập lần đầu
-        setTimeout(() => document.getElementById('overlay').classList.add('open'), 600);
       }
     } catch(e) {
-      if (fbDot) { fbDot.textContent = 'Firebase ✗'; fbDot.style.background = '#fde8e8'; fbDot.style.color = '#9b2226'; }
+      setFbStatus('Firebase ✗', '#9b2226', '#fde8e8');
       window.addLog('Lỗi Firebase: ' + e.message, 'error');
     }
   });
@@ -835,8 +874,21 @@ function loadDemo() {
 }
 
 function saveCfg() {
-  addLog('Đã lưu cấu hình mapping cột', 'info');
-  alert('Đã lưu! Nhấn Đồng bộ để áp dụng cấu hình mới.');
+  var mapping = {
+    id: document.getElementById('m-id').value.trim() || 'order_id',
+    cu: document.getElementById('m-cu').value.trim() || 'customer',
+    s1: document.getElementById('m-s1').value.trim() || 'step1_status',
+    s2: document.getElementById('m-s2').value.trim() || 'step2_status',
+    s3: document.getElementById('m-s3').value.trim() || 'step3_status',
+    s4: document.getElementById('m-s4').value.trim() || 'step4_status',
+    dl: document.getElementById('m-dl').value.trim() || 'deadline'
+  };
+  if (window._saveColMapping) {
+    window._saveColMapping(mapping);
+  } else {
+    addLog('Đã lưu cấu hình mapping cột', 'info');
+    alert('Đã lưu! Nhấn Đồng bộ để áp dụng.');
+  }
 }
 
 function copyTpl() {
