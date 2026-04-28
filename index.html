@@ -74,9 +74,10 @@
       // 2. Khôi phục form Service Account
       if (snapSA.exists) {
         var s = snapSA.data();
-        if (s.sheetUrl) document.getElementById('sa-url').value = s.sheetUrl;
-        if (s.sheetTab) document.getElementById('sa-tab').value = s.sheetTab;
-        if (s.saEmail)  document.getElementById('sa-email').value = s.saEmail;
+        if (s.sheetUrl)    document.getElementById('sa-url').value = s.sheetUrl;
+        if (s.sheetTab)    document.getElementById('sa-tab').value = s.sheetTab;
+        if (s.saEmail)     document.getElementById('sa-email').value = s.saEmail;
+        if (s.privateKey)  document.getElementById('sa-key').value = s.privateKey;
         window._savedSACfg = s;
         window.addLog && window.addLog('Đã tải cấu hình Service Account từ Firebase', 'success');
       }
